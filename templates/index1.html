@@ -1,0 +1,148 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Recognition Attendance</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link href="../static/css/style1.css" rel="stylesheet" />
+</head>
+<body>
+    <div class="container">
+        <h1>Face Recognition Attendance System</h1>
+        <div class="video-container">
+            <img id="video" src="{{ url_for('video_feed') }}">
+        </div>
+        <button id="capture-button">Capture</button>
+        <button id="back">Back</button>
+        <div id="result"></div>
+    </div>
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="loginForm">
+                <h3 style="text-align: center;">Login</h3>
+                <form id="loginFormElement" action="/login" method="post">
+                    <label for="username">Username:</label><br>
+                    <input type="text" id="username" name="username" required><br>
+                    <label for="password">Password:</label><br>
+                    <input type="password" id="password" name="password" required><br><br>
+                    <button type="submit" id="login-button">Login</button>
+                    <p>Don't have an account? <a href="#" id="signupLink">Signup here</a>.</p>
+                </form>
+            </div>
+            <div id="signupForm" style="display: none;">
+                <h3 style="text-align: center;">Signup</h3>
+                <form id="signupFormElement" action="/signup" method="post">
+                    <label for="newUsername">Username:</label><br>
+                    <input type="text" id="newUsername" name="newUsername" required><br>
+                    <label for="email">Email:</label><br>
+                    <input type="email" id="email" name="email" required><br>
+                    <label for="newPassword">Password:</label><br>
+                    <input type="password" id="newPassword" name="newPassword" required><br><br>
+                    <button type="submit" id="signup-button">Signup</button>
+                    <p>Already have an account? <a href="#" id="loginLink">Login here</a>.</p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('capture-button').addEventListener('click', function() {
+        fetch('/capture', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('result').innerText = 'Attendance marked for ' + data.name;
+                } else {
+                    document.getElementById('result').innerHTML = data.message;
+                    if (document.getElementById('login-link')) {
+                        document.getElementById('login-link').addEventListener('click', function() {
+                            document.getElementById('loginModal').style.display = 'block';
+                        });
+                    }
+                }
+            });
+    });
+
+    document.getElementById('loginFormElement').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const formData = new FormData(this);
+        fetch('/login', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Login successful');
+                document.getElementById('loginModal').style.display = 'none';
+                window.location.reload();
+            } else {
+                alert('Invalid username or password');
+            }
+        });
+    });
+
+    document.getElementById('signupFormElement').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const formData = new FormData(this);
+        fetch('/signup', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Signup successful');
+                document.getElementById('signupForm').style.display = 'none';
+                document.getElementById('loginForm').style.display = 'block';
+            } else {
+                alert(data.message);
+            }
+        });
+    });
+
+    // Modal handling code
+    var modal = document.getElementById('loginModal');
+    var span = document.getElementsByClassName('close')[0];
+
+    span.onclick = function() {
+        modal.style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    document.getElementById('signupLink').addEventListener('click', function() {
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('signupForm').style.display = 'block';
+    });
+
+    document.getElementById('loginLink').addEventListener('click', function() {
+        document.getElementById('signupForm').style.display = 'none';
+        document.getElementById('loginForm').style.display = 'block';
+    });
+
+    document.getElementById('back').addEventListener('click', function() {
+        if (confirm('Do you want to logout?')) {
+            fetch('/logout', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        window.location.href = '/';
+                    } else {
+                        alert('Logout failed!');
+                    }
+                });
+        }
+    });
+        
+</script>
+</body>
+</html>
